@@ -51,7 +51,7 @@ const SetLimit = ({route, navigation }) => {
                 setViewOpacity(1);
                 setLoader_spinner_animating(false);
                 setLoader_text_display('none'); 
-                console.log("... save_limit " + xhr.responseText + "...");
+                console.log("... save_limit " + xhr.responseText + "... spending_limit is " + spending_limit);
                 navigation.navigate("Home");
             }
         }

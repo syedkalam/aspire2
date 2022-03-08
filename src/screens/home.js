@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { ProgressBar, Text, ActivityIndicator, Colors, Switch } from 'react-native-paper';
-import { StyleSheet, View, TouchableOpacity, ScrollView } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, ScrollView ,Alert} from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useIsFocused } from '@react-navigation/native'; 
 import Bottom_navigator from '../components/bottom_navigator';  
@@ -30,23 +31,40 @@ const Home = ({ navigation }) => {
     const [spending_limit, setSpending_limit] = useState([]);
     const [money_spent_last_week, setMoney_spent_last_week] = useState(0);
     const isFocused = useIsFocused();
-    const [isSwitchOn, setIsSwitchOn] = React.useState(false);
-    const [spending_limit_percentage, setSpending_limit_percentage] = useState(0.1);
-   
+    const [isSwitchOn, setIsSwitchOn] =  useState(false); 
+    const [spending_limit_percentage, setSpending_limit_percentage] = useState(0.1); 
+    const hideSpending_limit_bar = () => { 
+
+        
+         setIsSwitchOn(false);
+         setDisplay_of_spending_limit('none');
+    }
+
+    const showSpending_limit_bar = () => {
 
 
+        setIsSwitchOn(true);
+        setDisplay_of_spending_limit('flex');
+    }
+    const goTo_spending_limit_screen = (non_formatted_spending_limit) => {
+
+
+        navigation.push("Set_limit", { non_formatted_spending_limit });
+    }
+    
     const onToggleSwitch = () => { 
         if (isSwitchOn == false) {
             setIsSwitchOn(!isSwitchOn);
-            setDisplay_of_spending_limit('flex'); 
+            showSpending_limit_bar(); 
              var non_formatted_spending_limit = spending_limit.replace(/\,/g, '');
                non_formatted_spending_limit = Number(non_formatted_spending_limit);
                console.log("non_formatted_spending_limit " + non_formatted_spending_limit);
-               navigation.navigate("Set_limit", { non_formatted_spending_limit })
+
+            const myTimeout = setTimeout(goTo_spending_limit_screen, 500, non_formatted_spending_limit);
+               
         }
         else {
-            setIsSwitchOn(!isSwitchOn);
-            setDisplay_of_spending_limit('none');
+            hideSpending_limit_bar(); 
         }
     }
     const add_astericks_to_acc_num = () => {
@@ -119,9 +137,18 @@ const Home = ({ navigation }) => {
                 setAcc_balance(formatMoney_service.formatMoney(res[0].balance));
                 setSpending_limit(formatMoney_service.formatMoney(res[0].spending_limit));
                 setMoney_spent_last_week(res[0].money_spent_last_week);
-                const tmp_per = res[0].money_spent_last_week / res[0].spending_limit;
-                console.log("progress bar per is " + tmp_per);
-                setSpending_limit_percentage(tmp_per);
+                if (res[0].spending_limit == '') {
+                   
+                }
+                else
+                {
+                    const myTimeout = setTimeout(showSpending_limit_bar, 100);
+                    const tmp_per = res[0].money_spent_last_week / res[0].spending_limit;
+                    console.log("progress bar per is " + tmp_per);
+                    setSpending_limit_percentage(tmp_per);
+                }
+               
+               
                 setViewOpacity(1);
                 setLoader_spinner_animating(false);
                 setLoader_text_display('none');
@@ -131,13 +158,20 @@ const Home = ({ navigation }) => {
         xhr.open('POST', serverURL, true);
         xhr.send(body);
     }
- 
-
-    useEffect(() => {
-        get_user_bank_data();
-    }, [isFocused]);
-
-
+  
+    useFocusEffect(
+        React.useCallback(() => {
+            console.log("in home spending_limit is " + spending_limit);
+            if (spending_limit == '') {
+                const myTimeout = setTimeout(hideSpending_limit_bar, 100);
+            }
+            else{                            
+                 const myTimeout = setTimeout(showSpending_limit_bar, 100);  
+            }
+             get_user_bank_data();   
+           
+        }, [spending_limit])
+    );
 
 
     return (
